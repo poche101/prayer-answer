@@ -1,0 +1,41 @@
+@import 'tailwindcss';
+
+/* Source discovery for Laravel components */
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    /* Main Professional Font */
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Custom Theme Colors for the Report System */
+    --color-brand-primary: #6366f1; /* Indigo 500 */
+    --color-brand-success: #10b981; /* Emerald 500 */
+    --color-brand-accent: #f59e0b;  /* Amber 500 */
+
+    /* Glassmorphism Presets */
+    --background-glass: rgba(255, 255, 255, 0.03);
+    --border-glass: rgba(255, 255, 255, 0.1);
+}
+
+@layer base {
+    body {
+        /* Ensuring a modern, dark, professional foundation */
+        @apply bg-slate-950 text-slate-200 antialiased selection:bg-indigo-500/30;
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    }
+}
+
+@layer components {
+    /* Custom Utility for your Report Cards */
+    .glass-card {
+        @apply bg-[var(--background-glass)] backdrop-blur-xl border border-[var(--border-glass)] rounded-2xl shadow-2xl;
+    }
+
+    .report-stat-label {
+        @apply text-xs uppercase tracking-[0.2em] font-bold text-slate-500;
+    }
+}
