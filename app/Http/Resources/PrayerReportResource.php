@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Carbon;
 
 class PrayerReportResource extends JsonResource
 {
@@ -19,28 +20,37 @@ class PrayerReportResource extends JsonResource
             'id' => $this->id,
 
             // Core Information
-            'group' => $this->group,
-            'church' => $this->church,
+            'group'       => $this->group,
+            'church'      => $this->church,
             'prayer_link' => $this->prayer_link,
 
             // Attendance Data
-            'attendance' => (int) $this->attendance,
-            'formatted_attendance' => number_format($this->attendance), // e.g., "1,200"
+            'attendance'           => (int) $this->attendance,
+            'formatted_attendance' => number_format($this->attendance),
 
-            /** * Date Formatting
-             * This fixes the "format() on string" error by using the
-             * casted Carbon instance from the Model.
-             */
-            'date' => $this->meeting_date->format('M d, Y'), // e.g., Mar 27, 2026
-            'raw_date' => $this->meeting_date->format('Y-m-d'), // For date picker inputs
+            // Date Fields
+            // 'date'         → pre-formatted for display:  "May 15, 2026"
+            // 'raw_date'     → Y-m-d for date picker inputs: "2026-05-15"
+            // 'meeting_date' → same as raw_date, kept for any legacy JS reads
+            'date'         => $this->meeting_date
+                                ? Carbon::parse($this->meeting_date)->format('M d, Y')
+                                : null,
+            'raw_date'     => $this->meeting_date
+                                ? Carbon::parse($this->meeting_date)->format('Y-m-d')
+                                : null,
+            'meeting_date' => $this->meeting_date
+                                ? Carbon::parse($this->meeting_date)->format('Y-m-d')
+                                : null,
 
-            // Content Handling
+            // Content
             'testimony' => $this->testimony ?? 'No testimony shared',
 
-            // Metadata for UI "time-stamps"
-            'submitted_at' => $this->created_at->diffForHumans(), // e.g., "2 hours ago"
+            // Metadata
+            'submitted_at' => $this->created_at
+                                ? Carbon::parse($this->created_at)->diffForHumans()
+                                : null,
 
-            // Helpful for conditional styling in the dashboard
+            // Helpers for conditional UI
             'has_testimony' => !empty($this->testimony),
         ];
     }

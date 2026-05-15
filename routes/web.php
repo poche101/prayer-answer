@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Api\PraiseReportController;
 use App\Http\Controllers\Api\PrayerReportController;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfTokens;
 
 /*
 |--------------------------------------------------------------------------
@@ -11,9 +12,9 @@ use App\Http\Controllers\Api\PrayerReportController;
 |--------------------------------------------------------------------------
 */
 
-// Redirect root to login page
+// Redirect root route directly to the praise report submission view page
 Route::get('/', function () {
-    return redirect()->route('login');
+    return view('welcome', ['type' => 'praise']);
 });
 
 // Using the 'welcome' view for both, but passing a 'type' variable
@@ -31,11 +32,16 @@ Route::get('/submit-prayer-report', function () {
 |--------------------------------------------------------------------------
 | We use 'submit-' in the URL to clearly distinguish these from the
 | Admin Management Resource routes.
+|
+| NOTE: .withoutMiddleware() strips the CSRF token requirements so your
+| stateless external API submits function seamlessly from your JavaScript.
 */
-Route::middleware('throttle:10,1')->group(function () {
-    Route::post('/api/submit-praise', [PraiseReportController::class, 'store'])->name('public.praise.store');
-    Route::post('/api/submit-prayer', [PrayerReportController::class, 'store'])->name('public.prayer.store');
-});
+Route::middleware('throttle:10,1')
+    ->withoutMiddleware([ValidateCsrfTokens::class])
+    ->group(function () {
+        Route::post('/api/submit-praise', [PraiseReportController::class, 'store'])->name('public.praise.store');
+        Route::post('/api/submit-prayer', [PrayerReportController::class, 'store'])->name('public.prayer.store');
+    });
 
 /*
 |--------------------------------------------------------------------------
@@ -69,11 +75,18 @@ Route::middleware(['auth'])->group(function () {
     |--------------------------------------------------------------------------
     | Internal Dashboard APIs (Admin Management)
     |--------------------------------------------------------------------------
+    | Explicitly overriding parameter bindings maps kebab-case route variables
+    | directly to your Controller's camelCase parameters ($prayerReport / $praiseReport).
     */
     Route::prefix('api-v1')->group(function () {
-        // These handle GET (index), GET (show), and DELETE (destroy)
-        Route::apiResource('prayer-reports', PrayerReportController::class)->except(['store']);
-        Route::apiResource('praise-reports', PraiseReportController::class)->except(['store']);
+
+        Route::apiResource('prayer-reports', PrayerReportController::class)
+            ->except(['store'])
+            ->parameters(['prayer-reports' => 'prayerReport']);
+
+        Route::apiResource('praise-reports', PraiseReportController::class)
+            ->except(['store'])
+            ->parameters(['praise-reports' => 'praiseReport']);
 
         Route::get('/user', function (Illuminate\Http\Request $request) {
             return $request->user();

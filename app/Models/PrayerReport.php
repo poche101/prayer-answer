@@ -2,24 +2,27 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class PrayerReport extends Model
 {
     use HasFactory;
 
-    protected $table = 'praise_reports'; // Keeps the same table name
+    protected $table = 'prayer_reports';
 
     protected $fillable = [
         'group',
         'church',
         'prayer_link',
+        'attendance',
         'meeting_date',
-        'testimony'
+        'testimony',
     ];
 
+    // 👇 ADD THIS CASTS ARRAY BELOW TO CONVERT STRINGS INTO CARBON OBJECTS
     protected $casts = [
-        'meeting_date' => 'date', // Fixes the ->format() on string error
+        'meeting_date' => 'date',
+        'attendance' => 'integer',
     ];
 }
