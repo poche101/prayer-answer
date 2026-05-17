@@ -16,79 +16,112 @@
 
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
-        select option { color: #000000; background-color: #ffffff; }
-        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1.5rem; }
+        select option { color: #3d2f1f; background-color: #fdf8f2; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.72);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(210, 185, 155, 0.35);
+            border-radius: 1.5rem;
+            box-shadow: 0 4px 32px rgba(160, 120, 70, 0.08), 0 1px 4px rgba(160,120,70,0.06);
+        }
         [x-cloak] { display: none !important; }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            opacity: 0.4;
+            cursor: pointer;
+        }
+
+        /* Center toast override */
+        .toastify {
+            left: 50% !important;
+            right: auto !important;
+            transform: translateX(-50%) !important;
+        }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-200 selection:bg-indigo-500/30 font-sans antialiased overflow-x-hidden">
+<body class="font-sans antialiased overflow-x-hidden" style="background-color: #faf6ef; color: #3d2f1f;">
 
-    <div class="min-h-screen flex items-center justify-center p-4 sm:p-8 relative overflow-hidden">
-        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/10 blur-[120px] rounded-full"></div>
-        <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-cyan-600/10 blur-[120px] rounded-full"></div>
+    {{-- Warm ambient blobs --}}
+    <div style="position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0;">
+        <div style="position:absolute;top:-8%;left:-8%;width:45%;height:45%;background:radial-gradient(circle,rgba(214,174,120,0.18) 0%,transparent 70%);border-radius:50%;"></div>
+        <div style="position:absolute;bottom:-8%;right:-8%;width:45%;height:45%;background:radial-gradient(circle,rgba(188,145,100,0.14) 0%,transparent 70%);border-radius:50%;"></div>
+        <div style="position:absolute;top:40%;left:55%;width:30%;height:30%;background:radial-gradient(circle,rgba(230,200,160,0.12) 0%,transparent 70%);border-radius:50%;"></div>
+    </div>
 
-        <main class="w-full max-w-2xl z-10" x-data="reportForm()">
+    <div class="min-h-screen flex items-center justify-center p-4 sm:p-8 relative" style="z-index:1;">
+
+        <main class="w-full max-w-2xl" x-data="reportForm()">
+
+            {{-- Header --}}
             <div class="text-center mb-10">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 mb-4">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style="background:rgba(180,140,90,0.12);border:1px solid rgba(180,140,90,0.25);">
                     <img src="/images/lz5.png" alt="Logo" class="w-10 h-10 object-contain">
                 </div>
-                <h1 class="text-3xl md:text-4xl font-bold tracking-tight bg-gradient-to-b from-white to-slate-400 bg-clip-text text-transparent">
-                    Early Morning Prayer <span class="block">& Answer Meeting {{ ucfirst($type ?? 'Praise') }} Report</span>
+                <h1 class="text-3xl md:text-4xl font-bold tracking-tight" style="color:#2c1f0f;">
+                    Early Morning Prayer
+                    <span class="block" style="color:#7a5230;">& Answer Meeting {{ ucfirst($type ?? 'Praise') }} Report</span>
                 </h1>
-                <p class="text-slate-500 mt-3 text-sm uppercase tracking-[0.2em]">Celz5 Documentation System</p>
             </div>
 
+            {{-- Form card --}}
             <form @submit.prevent="submitReport" class="glass-card p-8 md:p-10 space-y-8">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 
+                    {{-- Group --}}
                     <div class="space-y-3 md:col-span-2">
-                        <label class="report-stat-label flex items-center gap-2 text-sm font-semibold text-indigo-300">
-                            <i data-lucide="layers" class="w-4 h-4 text-indigo-400"></i> Select Group
+                        <label class="flex items-center gap-2 text-sm font-semibold" style="color:#7a5230;">
+                            <i data-lucide="layers" class="w-4 h-4" style="color:#b8894a;"></i> Select Group
                         </label>
                         <select
                             x-model="formData.group"
                             @change="updateChurches()"
                             required
-                            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all appearance-none cursor-pointer text-slate-200"
+                            class="w-full rounded-xl px-4 py-4 focus:outline-none transition-all appearance-none cursor-pointer"
+                            style="background:rgba(250,246,239,0.8);border:1px solid rgba(180,140,90,0.3);color:#3d2f1f;box-shadow:inset 0 1px 3px rgba(160,120,70,0.06);"
                         >
-                            <option value="" class="text-black">Choose a group...</option>
+                            <option value="" style="color:#9a7a55;">Choose a group...</option>
                             <template x-for="(churches, group) in data" :key="group">
-                                <option :value="group" x-text="group" class="text-black"></option>
+                                <option :value="group" x-text="group"></option>
                             </template>
                         </select>
                     </div>
 
+                    {{-- Church --}}
                     <div class="space-y-3 md:col-span-2" x-show="formData.group" x-transition.opacity x-cloak>
-                        <label class="report-stat-label flex items-center gap-2 text-sm font-semibold text-indigo-300">
-                            <i data-lucide="church" class="w-4 h-4 text-indigo-400"></i> Select Church
+                        <label class="flex items-center gap-2 text-sm font-semibold" style="color:#7a5230;">
+                            <i data-lucide="church" class="w-4 h-4" style="color:#b8894a;"></i> Select Church
                         </label>
                         <select
                             x-model="formData.church"
                             required
-                            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all appearance-none cursor-pointer text-slate-200"
+                            class="w-full rounded-xl px-4 py-4 focus:outline-none transition-all appearance-none cursor-pointer"
+                            style="background:rgba(250,246,239,0.8);border:1px solid rgba(180,140,90,0.3);color:#3d2f1f;box-shadow:inset 0 1px 3px rgba(160,120,70,0.06);"
                         >
-                            <option value="" class="text-black">Choose your local church...</option>
+                            <option value="" style="color:#9a7a55;">Choose your local church...</option>
                             <template x-for="church in availableChurches" :key="church">
-                                <option :value="church" x-text="church" class="text-black"></option>
+                                <option :value="church" x-text="church"></option>
                             </template>
                         </select>
                     </div>
 
+                    {{-- Date --}}
                     <div class="space-y-3">
-                        <label class="report-stat-label flex items-center gap-2 text-sm font-semibold text-indigo-300">
-                            <i data-lucide="calendar" class="w-4 h-4 text-indigo-400"></i> Meeting Date
+                        <label class="flex items-center gap-2 text-sm font-semibold" style="color:#7a5230;">
+                            <i data-lucide="calendar" class="w-4 h-4" style="color:#b8894a;"></i> Meeting Date
                         </label>
                         <input
                             type="date"
                             x-model="formData.meeting_date"
                             required
-                            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all text-slate-200"
+                            class="w-full rounded-xl px-4 py-4 focus:outline-none transition-all"
+                            style="background:rgba(250,246,239,0.8);border:1px solid rgba(180,140,90,0.3);color:#3d2f1f;box-shadow:inset 0 1px 3px rgba(160,120,70,0.06);"
                         >
                     </div>
 
+                    {{-- Attendance --}}
                     <div class="space-y-3">
-                        <label class="report-stat-label flex items-center gap-2 text-sm font-semibold text-indigo-300">
-                            <i data-lucide="users" class="w-4 h-4 text-indigo-400"></i> Total Attendance
+                        <label class="flex items-center gap-2 text-sm font-semibold" style="color:#7a5230;">
+                            <i data-lucide="users" class="w-4 h-4" style="color:#b8894a;"></i> Total Attendance
                         </label>
                         <input
                             type="number"
@@ -96,48 +129,56 @@
                             required
                             min="1"
                             placeholder="e.g. 45"
-                            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all text-slate-200"
+                            class="w-full rounded-xl px-4 py-4 focus:outline-none transition-all"
+                            style="background:rgba(250,246,239,0.8);border:1px solid rgba(180,140,90,0.3);color:#3d2f1f;box-shadow:inset 0 1px 3px rgba(160,120,70,0.06);"
                         >
                     </div>
 
+                    {{-- Prayer link --}}
                     <div class="space-y-3 md:col-span-2">
-                        <label class="report-stat-label flex items-center gap-2 text-sm font-semibold text-indigo-300">
-                            <i data-lucide="link" class="w-4 h-4 text-indigo-400"></i> Prayer Link
+                        <label class="flex items-center gap-2 text-sm font-semibold" style="color:#7a5230;">
+                            <i data-lucide="link" class="w-4 h-4" style="color:#b8894a;"></i> Prayer Link
                         </label>
                         <input
                             type="url"
                             x-model="formData.prayer_link"
                             required
                             placeholder="https://kingsconference.org/..."
-                            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all placeholder:text-slate-600 text-slate-200"
+                            class="w-full rounded-xl px-4 py-4 focus:outline-none transition-all"
+                            style="background:rgba(250,246,239,0.8);border:1px solid rgba(180,140,90,0.3);color:#3d2f1f;box-shadow:inset 0 1px 3px rgba(160,120,70,0.06);"
                         >
                     </div>
 
+                    {{-- Testimony --}}
                     <div class="space-y-3 md:col-span-2">
-                        <label class="report-stat-label flex items-center gap-2 text-sm font-semibold text-indigo-300">
-                            <i data-lucide="message-square-quote" class="w-4 h-4 text-indigo-400"></i> Testimony (Optional)
+                        <label class="flex items-center gap-2 text-sm font-semibold" style="color:#7a5230;">
+                            <i data-lucide="message-square-quote" class="w-4 h-4" style="color:#b8894a;"></i> Testimony <span style="color:#b89a72;font-weight:400;">(Optional)</span>
                         </label>
                         <textarea
                             x-model="formData.testimony"
                             rows="4"
                             placeholder="Share your testimony here..."
-                            class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition-all placeholder:text-slate-600 text-slate-200 resize-none"
+                            class="w-full rounded-xl px-4 py-4 focus:outline-none transition-all resize-none"
+                            style="background:rgba(250,246,239,0.8);border:1px solid rgba(180,140,90,0.3);color:#3d2f1f;box-shadow:inset 0 1px 3px rgba(160,120,70,0.06);"
                         ></textarea>
                     </div>
                 </div>
 
+                {{-- Submit button --}}
                 <button
                     type="submit"
                     :disabled="loading"
-                    class="group relative w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-4 rounded-xl shadow-xl shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 overflow-hidden"
+                    class="group relative w-full font-semibold py-4 rounded-xl transition-all flex items-center justify-center gap-2 overflow-hidden"
+                    style="background:#7a5230;color:#fdf8f2;box-shadow:0 4px 20px rgba(122,82,48,0.25);"
+                    onmouseover="this.style.background='#8f6238'"
+                    onmouseout="this.style.background='#7a5230'"
                 >
                     <span class="relative z-10" x-text="loading ? 'Submitting...' : 'Submit {{ ucfirst($type ?? 'Praise') }} Report'"></span>
                     <i data-lucide="chevron-right" x-show="!loading" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
-                    <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                 </button>
             </form>
 
-            <p class="text-center text-slate-600 text-xs mt-8 tracking-widest uppercase">
+            <p class="text-center text-xs mt-8 tracking-widest uppercase" style="color:#c4a882;">
                 &copy; 2026 Prayer & Answer Report
             </p>
         </main>
@@ -147,6 +188,23 @@
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
         });
+
+        function showToast(text, background) {
+            Toastify({
+                text: text,
+                duration: 5000,
+                gravity: "top",
+                position: "center",
+                style: {
+                    background: background,
+                    borderRadius: "12px",
+                    padding: "14px 28px",
+                    fontSize: "15px",
+                    fontWeight: "600",
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.14)",
+                }
+            }).showToast();
+        }
 
         function reportForm() {
             return {
@@ -194,7 +252,6 @@
                 async submitReport() {
                     this.loading = true;
                     try {
-                        // Dynamically choose endpoint based on reportType
                         const endpoint = this.reportType === 'praise' ? '/api/submit-praise' : '/api/submit-prayer';
 
                         const response = await fetch(endpoint, {
@@ -210,13 +267,10 @@
                         const result = await response.json();
 
                         if (response.ok) {
-                            Toastify({
-                                text: `${this.reportType.charAt(0).toUpperCase() + this.reportType.slice(1)} Report Submitted!`,
-                                duration: 5000,
-                                gravity: "top",
-                                position: "right",
-                                style: { background: "linear-gradient(to right, #4f46e5, #06b6d4)" }
-                            }).showToast();
+                            showToast(
+                                '✓  ' + this.reportType.charAt(0).toUpperCase() + this.reportType.slice(1) + ' Report Submitted Successfully!',
+                                'linear-gradient(to right, #7a5230, #b8894a)'
+                            );
 
                             this.formData = {
                                 group: '',
@@ -231,13 +285,7 @@
                             throw new Error(errorMsg);
                         }
                     } catch (error) {
-                        Toastify({
-                            text: "Error: " + error.message,
-                            duration: 5000,
-                            gravity: "top",
-                            position: "right",
-                            style: { background: "#ef4444" }
-                        }).showToast();
+                        showToast('✕  Error: ' + error.message, '#b84a4a');
                     } finally {
                         this.loading = false;
                     }

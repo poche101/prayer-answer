@@ -3,303 +3,839 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | Praise Reports</title>
+    <title>Dashboard | Early Morning Prayer & Answer Reports</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     @vite('resources/css/app.css')
     <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        :root {
+            --bg:        #faf6ef;
+            --bg-card:   rgba(255,255,255,0.78);
+            --bg-hover:  rgba(255,255,255,0.95);
+            --border:    rgba(180,140,90,0.18);
+            --border-md: rgba(180,140,90,0.28);
+            --border-strong: rgba(180,140,90,0.45);
+            --text-1:    #2c1f0f;
+            --text-2:    #7a5230;
+            --text-3:    #b89a72;
+            --text-4:    #d4b896;
+            --amber:     #b8894a;
+            --amber-dk:  #7a5230;
+            --amber-lt:  rgba(184,137,74,0.10);
+            --amber-glow:rgba(184,137,74,0.18);
+            --success:   #5a8a5a;
+            --success-bg:rgba(90,138,90,0.08);
+            --danger:    #a03030;
+            --danger-bg: rgba(160,48,48,0.08);
+            --shadow-sm: 0 1px 4px rgba(160,120,70,0.07);
+            --shadow-md: 0 4px 20px rgba(160,120,70,0.10);
+            --shadow-lg: 0 8px 40px rgba(160,120,70,0.13);
+            --radius-sm: 10px;
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --radius-xl: 28px;
+        }
+
         [x-cloak] { display: none !important; }
-        .glass-panel { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 
-        .shimmer {
-            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0) 100%);
-            background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
+        body {
+            background-color: var(--bg);
+            color: var(--text-1);
+            font-family: 'Instrument Sans', sans-serif;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
         }
 
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
+        /* Ambient bg blobs */
+        .bg-blobs { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+        .bg-blobs span {
+            position: absolute;
+            border-radius: 50%;
+        }
+        .bg-blobs span:nth-child(1) { top: -10%; left: -5%; width: 50%; height: 50%; background: radial-gradient(circle, rgba(214,174,120,0.15) 0%, transparent 70%); }
+        .bg-blobs span:nth-child(2) { bottom: -10%; right: -5%; width: 45%; height: 45%; background: radial-gradient(circle, rgba(188,145,100,0.12) 0%, transparent 70%); }
+        .bg-blobs span:nth-child(3) { top: 35%; left: 50%; width: 35%; height: 35%; background: radial-gradient(circle, rgba(230,200,160,0.10) 0%, transparent 70%); }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-sm);
+            backdrop-filter: blur(12px);
+        }
+        .card-hover { transition: box-shadow 0.2s, border-color 0.2s, background 0.2s; }
+        .card-hover:hover { box-shadow: var(--shadow-md); border-color: var(--border-md); background: var(--bg-hover); }
+
+        /* Nav */
+        nav {
+            background: rgba(250,246,239,0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 100;
         }
 
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(1);
+        /* Stat cards */
+        .stat-icon {
+            width: 48px; height: 48px;
+            border-radius: var(--radius-md);
+            background: var(--amber-lt);
+            border: 1px solid var(--border-md);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--amber);
+            transition: background 0.3s, color 0.3s;
+        }
+        .stat-card:hover .stat-icon {
+            background: var(--amber-dk);
+            color: #fdf8f2;
+        }
+
+        /* Table */
+        table { width: 100%; border-collapse: collapse; }
+        thead th {
+            padding: 14px 24px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--text-3);
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+            background: rgba(250,246,239,0.5);
+        }
+        tbody tr {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.15s;
+        }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: rgba(255,255,255,0.6); }
+        tbody td { padding: 16px 24px; vertical-align: middle; }
+
+        /* Inputs */
+        .field {
+            background: rgba(250,246,239,0.8);
+            border: 1px solid var(--border-md);
+            border-radius: var(--radius-md);
+            padding: 11px 16px;
+            font-size: 14px;
+            color: var(--text-1);
+            font-family: 'Instrument Sans', sans-serif;
+            width: 100%;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .field:focus {
+            border-color: var(--amber);
+            box-shadow: 0 0 0 3px rgba(184,137,74,0.12);
+        }
+        .field::placeholder { color: var(--text-4); }
+
+        input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.4; cursor: pointer; }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 10px 20px;
+            font-size: 13px; font-weight: 600;
+            border-radius: var(--radius-md);
+            border: 1px solid transparent;
+            cursor: pointer; transition: all 0.18s;
+            font-family: 'Instrument Sans', sans-serif;
+            white-space: nowrap;
+        }
+        .btn-ghost {
+            background: rgba(255,255,255,0.5);
+            border-color: var(--border-md);
+            color: var(--text-2);
+        }
+        .btn-ghost:hover { background: rgba(255,255,255,0.9); border-color: var(--border-strong); }
+        .btn-primary {
+            background: var(--amber-dk);
+            color: #fdf8f2;
+            border-color: var(--amber-dk);
+            box-shadow: 0 3px 14px rgba(122,82,48,0.22);
+        }
+        .btn-primary:hover { background: #8f6238; box-shadow: 0 4px 18px rgba(122,82,48,0.28); }
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+            border-color: var(--danger);
+            box-shadow: 0 3px 14px rgba(160,48,48,0.2);
+        }
+        .btn-danger:hover { background: #b83535; }
+        .btn-icon {
+            width: 36px; height: 36px; padding: 0;
+            border-radius: var(--radius-sm);
+            background: transparent;
+            border-color: transparent;
+            color: var(--text-3);
+        }
+        .btn-icon:hover { background: var(--amber-lt); color: var(--amber-dk); border-color: var(--border-md); }
+        .btn-icon.danger:hover { background: var(--danger-bg); color: var(--danger); border-color: rgba(160,48,48,0.2); }
+
+        /* Badges */
+        .badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 4px 10px; border-radius: 100px;
+            font-size: 11px; font-weight: 600;
+        }
+        .badge-success { background: var(--success-bg); color: var(--success); border: 1px solid rgba(90,138,90,0.2); }
+        .badge-amber   { background: var(--amber-lt);   color: var(--amber-dk); border: 1px solid var(--border-md); }
+
+        /* ── Report Link cell ── */
+        .link-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            max-width: 220px;
+        }
+        .link-url {
+            font-size: 12px;
+            color: var(--amber-dk);
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-decoration: none;
+            flex: 1;
+            min-width: 0;
+        }
+        .link-url:hover { text-decoration: underline; }
+        .link-no-url {
+            font-size: 12px;
+            color: var(--text-4);
+            font-style: italic;
+        }
+        .btn-copy {
+            flex-shrink: 0;
+            width: 28px; height: 28px; padding: 0;
+            border-radius: 8px;
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-3);
             cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center;
+            transition: all 0.18s;
+            font-family: 'Instrument Sans', sans-serif;
         }
+        .btn-copy:hover {
+            background: var(--amber-lt);
+            color: var(--amber-dk);
+            border-color: var(--border-md);
+        }
+        .btn-copy.copied {
+            background: var(--success-bg);
+            color: var(--success);
+            border-color: rgba(90,138,90,0.2);
+        }
+
+        /* Toast */
+        .toast-wrap { position: fixed; bottom: 28px; right: 28px; z-index: 200; display: flex; flex-direction: column; gap: 10px; }
+        .toast {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 20px; border-radius: var(--radius-md);
+            background: rgba(255,255,255,0.97);
+            border: 1px solid var(--border-strong);
+            box-shadow: var(--shadow-lg);
+            min-width: 280px; max-width: 380px;
+            font-size: 13px; font-weight: 600;
+            color: var(--text-1);
+        }
+        .toast-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .toast-dot.success { background: var(--success); }
+        .toast-dot.error   { background: var(--danger); }
+
+        /* Modal overlay */
+        .overlay {
+            position: fixed; inset: 0; z-index: 150;
+            display: flex; align-items: center; justify-content: center; padding: 16px;
+            background: rgba(44,31,15,0.35);
+            backdrop-filter: blur(8px);
+        }
+        .modal {
+            background: #fdf8f2;
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            width: 100%; max-width: 480px;
+            padding: 36px;
+            position: relative; z-index: 1;
+        }
+        .modal-lg { max-width: 640px; }
+        .modal-label {
+            display: block;
+            font-size: 10px; font-weight: 700;
+            letter-spacing: 0.14em; text-transform: uppercase;
+            color: var(--text-3); margin-bottom: 7px;
+        }
+
+        /* Pagination */
+        .page-btn {
+            width: 36px; height: 36px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-md);
+            background: rgba(255,255,255,0.6);
+            color: var(--text-2);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.15s;
+        }
+        .page-btn:hover:not(:disabled) { background: var(--amber-dk); color: #fdf8f2; border-color: var(--amber-dk); }
+        .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 10px; }
+
+        /* Loading spinner */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner { animation: spin 0.8s linear infinite; }
+
+        /* Progress bar */
+        .progress-bar { height: 3px; border-radius: 100px; background: var(--border-md); overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--amber-dk); border-radius: 100px; transition: width 0.4s; }
+
+        /* Search icon offset */
+        .search-wrap { position: relative; }
+        .search-wrap .field { padding-left: 42px; }
+        .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-3); pointer-events: none; }
+
+        /* ── Weekly Leaderboard ── */
+        @keyframes shimmer {
+            0%   { background-position: -200% center; }
+            100% { background-position:  200% center; }
+        }
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0);    }
+        }
+        @keyframes bar-grow {
+            from { width: 0%; }
+        }
+        @keyframes crown-pulse {
+            0%, 100% { transform: scale(1) rotate(-8deg); filter: drop-shadow(0 0 4px rgba(184,137,74,0.4)); }
+            50%       { transform: scale(1.18) rotate(-8deg); filter: drop-shadow(0 0 10px rgba(184,137,74,0.8)); }
+        }
+
+        .leaderboard-strip {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        .day-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px 18px 18px;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(12px);
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s;
+            animation: rise 0.4s ease both;
+        }
+        .day-card:hover {
+            box-shadow: var(--shadow-md);
+            border-color: var(--border-md);
+            transform: translateY(-2px);
+        }
+
+        /* Today highlight */
+        .day-card.is-today {
+            background: linear-gradient(145deg, rgba(122,82,48,0.97) 0%, rgba(90,58,30,0.97) 100%);
+            border-color: var(--amber);
+            box-shadow: 0 6px 28px rgba(122,82,48,0.30);
+        }
+        .day-card.is-today .day-label   { color: rgba(253,248,242,0.6); }
+        .day-card.is-today .day-name    { color: #fdf8f2; }
+        .day-card.is-today .winner-name { color: #fdf8f2; }
+        .day-card.is-today .winner-church { color: rgba(253,248,242,0.65); }
+        .day-card.is-today .att-count   { color: #fdf8f2; }
+        .day-card.is-today .att-label   { color: rgba(253,248,242,0.5); }
+        .day-card.is-today .bar-track   { background: rgba(255,255,255,0.12); }
+        .day-card.is-today .bar-fill    { background: linear-gradient(90deg, rgba(253,248,242,0.5), rgba(253,248,242,0.9)); }
+        .day-card.is-today .no-data     { color: rgba(253,248,242,0.4); }
+
+        /* Shimmer stripe on today */
+        .day-card.is-today::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.06) 50%, transparent 60%);
+            background-size: 200% 100%;
+            animation: shimmer 3s linear infinite;
+            pointer-events: none;
+        }
+
+        .day-label {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--text-4);
+            margin: 0 0 2px;
+        }
+        .day-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-1);
+            margin: 0 0 16px;
+        }
+
+        .crown-wrap {
+            position: absolute;
+            top: 16px; right: 16px;
+            font-size: 18px;
+            line-height: 1;
+            animation: crown-pulse 2.4s ease-in-out infinite;
+        }
+        .day-card:not(.is-today) .crown-wrap { animation: none; opacity: 0.7; }
+
+        .winner-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-1);
+            margin: 0 0 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .winner-church {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            color: var(--text-3);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin: 0 0 14px;
+        }
+
+        .bar-track {
+            height: 4px;
+            border-radius: 100px;
+            background: var(--border-md);
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        .bar-fill {
+            height: 100%;
+            border-radius: 100px;
+            background: linear-gradient(90deg, var(--amber) 0%, var(--amber-dk) 100%);
+            animation: bar-grow 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .att-row {
+            display: flex;
+            align-items: baseline;
+            gap: 5px;
+        }
+        .att-count {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-1);
+            line-height: 1;
+        }
+        .att-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            color: var(--text-3);
+            text-transform: uppercase;
+        }
+
+        .no-data {
+            font-size: 12px;
+            color: var(--text-4);
+            margin: 16px 0 0;
+            font-style: italic;
+        }
+
+        .leaderboard-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+        .leaderboard-title {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--text-3);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .leaderboard-week {
+            font-size: 11px;
+            color: var(--text-4);
+            font-weight: 500;
+        }
+
+        /* Stagger animation delays */
+        .day-card:nth-child(1) { animation-delay: 0.05s; }
+        .day-card:nth-child(2) { animation-delay: 0.10s; }
+        .day-card:nth-child(3) { animation-delay: 0.15s; }
+        .day-card:nth-child(4) { animation-delay: 0.20s; }
+        .day-card:nth-child(5) { animation-delay: 0.25s; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-200 font-sans antialiased min-h-screen" x-data="dashboard()">
+<body x-data="dashboard()">
 
-    <div class="fixed bottom-6 right-6 z-[150] flex flex-col gap-3">
+    {{-- Ambient blobs --}}
+    <div class="bg-blobs"><span></span><span></span><span></span></div>
+
+    {{-- ── Toasts ── --}}
+    <div class="toast-wrap">
         <template x-for="toast in toasts" :key="toast.id">
-            <div x-show="true"
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="translate-y-10 opacity-0"
-                 x-transition:enter-end="translate-y-0 opacity-100"
-                 x-transition:leave="transition ease-in duration-200"
+            <div class="toast"
+                 x-transition:enter="transition ease-out duration-250"
+                 x-transition:enter-start="opacity-0 translate-y-3"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-180"
                  x-transition:leave-start="opacity-100"
-                 x-transition:leave-end="opacity-0"
-                 :class="toast.type === 'success' ? 'border-emerald-500/50 bg-emerald-500/10' : 'border-red-500/50 bg-red-500/10'"
-                 class="flex items-center gap-3 px-6 py-4 rounded-2xl border backdrop-blur-xl shadow-2xl min-w-[300px]">
-                <i :class="toast.type === 'success' ? 'text-emerald-400' : 'text-red-400'"
-                   class="w-5 h-5" :data-lucide="toast.type === 'success' ? 'check-circle' : 'alert-circle'"></i>
-                <span class="text-sm font-medium text-white" x-text="toast.message"></span>
+                 x-transition:leave-end="opacity-0">
+                <div class="toast-dot" :class="toast.type === 'success' ? 'success' : 'error'"></div>
+                <span x-text="toast.message"></span>
             </div>
         </template>
     </div>
 
-    <div x-show="showEditModal"
-         class="fixed inset-0 z-[110] flex items-center justify-center px-4 overflow-hidden"
-         x-transition:enter="transition ease-out duration-300"
+    {{-- ── Edit Modal ── --}}
+    <div class="overlay" x-show="showEditModal" x-cloak
+         x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave="transition ease-in duration-150"
          x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         x-cloak>
-        <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-md" @click="showEditModal = false"></div>
-        <div class="glass-panel w-full max-w-lg p-8 rounded-[2.5rem] relative z-10 border-white/10 shadow-2xl"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="scale-95 opacity-0"
-             x-transition:enter-end="scale-100 opacity-100">
+         x-transition:leave-end="opacity-0">
+        <div class="absolute inset-0" @click="showEditModal = false"></div>
+        <div class="modal"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100">
 
-            <h3 class="text-2xl font-bold mb-6 flex items-center gap-3">
-                <i data-lucide="edit-3" class="text-indigo-400"></i> Edit Report
-            </h3>
-
-            <div class="space-y-4">
-                <div>
-                    <label class="text-[10px] uppercase tracking-widest text-slate-500 font-black mb-2 block ml-1">Church Name</label>
-                    <input type="text" x-model="editForm.church" class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 focus:ring-2 focus:ring-indigo-500/40 outline-none transition-all">
+            <div class="flex items-center gap-3 mb-7">
+                <div style="width:40px;height:40px;border-radius:10px;background:var(--amber-lt);border:1px solid var(--border-md);display:flex;align-items:center;justify-content:center;color:var(--amber-dk);">
+                    <i data-lucide="edit-3" style="width:18px;height:18px;"></i>
                 </div>
                 <div>
-                    <label class="text-[10px] uppercase tracking-widest text-slate-500 font-black mb-2 block ml-1">Group Name</label>
-                    <input type="text" x-model="editForm.group" class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 focus:ring-2 focus:ring-indigo-500/40 outline-none transition-all">
-                </div>
-                <div>
-                    <label class="text-[10px] uppercase tracking-widest text-slate-500 font-black mb-2 block ml-1">Meeting Date</label>
-                    <input type="date" x-model="editForm.meeting_date" class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 focus:ring-2 focus:ring-indigo-500/40 outline-none transition-all text-white">
-                </div>
-                <div>
-                    <label class="text-[10px] uppercase tracking-widest text-slate-500 font-black mb-2 block ml-1">Report Link</label>
-                    <input type="url" x-model="editForm.prayer_link" class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 focus:ring-2 focus:ring-indigo-500/40 outline-none transition-all">
+                    <h3 style="font-size:17px;font-weight:700;color:var(--text-1);margin:0;">Edit Report</h3>
+                    <p style="font-size:12px;color:var(--text-3);margin:0;" x-text="editForm.church"></p>
                 </div>
             </div>
 
-            <div class="flex gap-4 mt-8">
-                <button @click="showEditModal = false" class="flex-1 px-6 py-4 rounded-2xl bg-white/5 hover:bg-white/10 font-bold transition-all border border-white/10 text-slate-300">Cancel</button>
-                <button @click="confirmUpdate" class="flex-1 px-6 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition-all shadow-lg shadow-indigo-900/40">Update Changes</button>
+            <div style="display:grid;gap:16px;">
+                <div>
+                    <label class="modal-label">Church Name</label>
+                    <input type="text" x-model="editForm.church" class="field">
+                </div>
+                <div>
+                    <label class="modal-label">Group Name</label>
+                    <input type="text" x-model="editForm.group" class="field">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                        <label class="modal-label">Meeting Date</label>
+                        <input type="date" x-model="editForm.meeting_date" class="field">
+                    </div>
+                    <div>
+                        <label class="modal-label">Attendance</label>
+                        <input type="number" x-model="editForm.attendance" min="1" class="field">
+                    </div>
+                </div>
+                <div>
+                    <label class="modal-label">Report Link</label>
+                    <input type="url" x-model="editForm.prayer_link" class="field">
+                </div>
             </div>
-        </div>
-    </div>
 
-    <div x-show="showDeleteModal"
-         class="fixed inset-0 z-[110] flex items-center justify-center px-4 overflow-hidden"
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         x-cloak>
-
-        <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-md" @click="showDeleteModal = false"></div>
-
-        <div class="glass-panel w-full max-w-md p-8 rounded-[2.5rem] relative z-10 border-white/10 shadow-2xl"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="scale-90 opacity-0"
-             x-transition:enter-end="scale-100 opacity-100">
-
-            <div class="flex flex-col items-center text-center">
-                <div class="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mb-6 border border-red-500/20">
-                    <i data-lucide="trash-2" class="w-10 h-10"></i>
-                </div>
-                <h3 class="text-2xl font-bold mb-2">Confirm Deletion</h3>
-                <p class="text-slate-400 text-sm mb-8 leading-relaxed">
-                    This action is permanent. You are about to delete the report for <span class="text-white font-semibold" x-text="reportToDelete?.church"></span>.
-                </p>
-
-                <div class="flex gap-4 w-full">
-                    <button @click="showDeleteModal = false"
-                            class="flex-1 px-6 py-4 rounded-2xl bg-white/5 hover:bg-white/10 font-bold transition-all border border-white/10 text-slate-300">
-                        Cancel
-                    </button>
-                    <button @click="confirmDelete"
-                            class="flex-1 px-6 py-4 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-bold transition-all shadow-lg shadow-red-900/40">
-                        Delete
-                    </button>
-                </div>
+            <div style="display:flex;gap:10px;margin-top:24px;">
+                <button @click="showEditModal = false" class="btn btn-ghost" style="flex:1;">Cancel</button>
+                <button @click="confirmUpdate" class="btn btn-primary" style="flex:1;">Save Changes</button>
             </div>
         </div>
     </div>
 
-    <div x-show="showTestimonyModal"
-         class="fixed inset-0 z-[120] flex items-center justify-center px-4 overflow-hidden"
-         x-transition:enter="transition ease-out duration-300"
+    {{-- ── Delete Modal ── --}}
+    <div class="overlay" x-show="showDeleteModal" x-cloak
+         x-transition:enter="transition ease-out duration-200"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave="transition ease-in duration-150"
          x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         x-cloak>
-        <div class="absolute inset-0 bg-slate-950/90 backdrop-blur-xl" @click="showTestimonyModal = false"></div>
-        <div class="glass-panel w-full max-w-2xl p-10 rounded-[2.5rem] relative z-10 border-white/10 shadow-2xl"
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="scale-95 opacity-0"
-             x-transition:enter-end="scale-100 opacity-100">
+         x-transition:leave-end="opacity-0">
+        <div class="absolute inset-0" @click="showDeleteModal = false"></div>
+        <div class="modal" style="max-width:420px;text-align:center;"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100">
 
-            <div class="flex items-start justify-between mb-6">
+            <div style="width:56px;height:56px;border-radius:50%;background:var(--danger-bg);border:1px solid rgba(160,48,48,0.2);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:var(--danger);">
+                <i data-lucide="trash-2" style="width:24px;height:24px;"></i>
+            </div>
+            <h3 style="font-size:18px;font-weight:700;margin:0 0 8px;color:var(--text-1);">Delete this record?</h3>
+            <p style="font-size:13px;color:var(--text-2);line-height:1.6;margin:0 0 28px;">
+                You are about to permanently remove the report for
+                <strong x-text="reportToDelete?.church" style="color:var(--text-1);"></strong>.
+                This cannot be undone.
+            </p>
+            <div style="display:flex;gap:10px;">
+                <button @click="showDeleteModal = false" class="btn btn-ghost" style="flex:1;">Keep it</button>
+                <button @click="confirmDelete" class="btn btn-danger" style="flex:1;">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    {{-- ── Testimony Modal ── --}}
+    <div class="overlay" x-show="showTestimonyModal" x-cloak
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        <div class="absolute inset-0" @click="showTestimonyModal = false"></div>
+        <div class="modal modal-lg"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100">
+
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;">
                 <div>
-                    <h3 class="text-2xl font-bold text-white mb-1" x-text="selectedTestimony?.church"></h3>
-                    <p class="text-xs font-black text-indigo-400 uppercase tracking-widest" x-text="selectedTestimony?.group"></p>
+                    <h3 style="font-size:17px;font-weight:700;color:var(--text-1);margin:0 0 3px;" x-text="selectedTestimony?.church"></h3>
+                    <p style="font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--amber);margin:0;" x-text="selectedTestimony?.group"></p>
                 </div>
-                <button @click="showTestimonyModal = false" class="p-2 hover:bg-white/5 rounded-full transition-colors text-slate-500 hover:text-white">
-                    <i data-lucide="x" class="w-6 h-6"></i>
+                <button @click="showTestimonyModal = false" class="btn btn-icon">
+                    <i data-lucide="x" style="width:16px;height:16px;"></i>
                 </button>
             </div>
 
-            <div class="bg-white/5 rounded-3xl p-6 border border-white/5 max-h-[50vh] overflow-y-auto">
-                <p class="text-slate-300 leading-relaxed whitespace-pre-line text-lg" x-text="selectedTestimony?.testimony"></p>
+            <div style="background:rgba(250,246,239,0.8);border:1px solid var(--border);border-radius:var(--radius-md);padding:20px;max-height:50vh;overflow-y:auto;">
+                <p style="font-size:14px;line-height:1.75;color:var(--text-1);white-space:pre-line;margin:0;" x-text="selectedTestimony?.testimony"></p>
             </div>
 
-            <div class="mt-8 flex justify-end">
-                <button @click="showTestimonyModal = false" class="px-8 py-3.5 rounded-2xl bg-white/5 hover:bg-white/10 font-bold transition-all border border-white/10">Close</button>
+            <div style="display:flex;justify-content:flex-end;margin-top:20px;">
+                <button @click="showTestimonyModal = false" class="btn btn-ghost">Close</button>
             </div>
         </div>
     </div>
 
-    <nav class="border-b border-white/5 bg-slate-950/50 backdrop-blur-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="p-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
-                    <img src="/images/lz5.png" class="w-6 h-6 object-contain" alt="Logo">
+    {{-- ── Nav ── --}}
+    <nav>
+        <div style="max-width:1280px;margin:0 auto;padding:0 28px;height:64px;display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <div style="width:36px;height:36px;border-radius:10px;background:var(--amber-lt);border:1px solid var(--border-md);display:flex;align-items:center;justify-content:center;">
+                    <img src="/images/lz5.png" style="width:22px;height:22px;object-fit:contain;" alt="Logo">
                 </div>
-                <span class="font-bold text-xl tracking-tight">Celz5 <span class="text-indigo-500">Early Morning Reports</span></span>
+                <div>
+                    <span style="font-size:15px;font-weight:700;color:var(--text-1);">Celz5</span>
+                    <span style="font-size:15px;font-weight:400;color:var(--text-2);"> · Early Morning Reports</span>
+                </div>
             </div>
-            <form action="{{ route('logout') }}" method="POST">
-                @csrf
-                <button type="submit" class="text-slate-400 hover:text-white transition-all hover:bg-white/5 px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-medium">
-                    <i data-lucide="log-out" class="w-4 h-4"></i> Sign Out
-                </button>
-            </form>
+
+            <div style="display:flex;align-items:center;gap:8px;">
+                <div style="font-size:12px;color:var(--text-3);padding-right:12px;border-right:1px solid var(--border);" x-text="`${reports.length} records`"></div>
+                <form action="{{ route('logout') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="btn btn-ghost" style="font-size:12px;padding:8px 14px;">
+                        <i data-lucide="log-out" style="width:14px;height:14px;"></i> Sign Out
+                    </button>
+                </form>
+            </div>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-6 py-10">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+    {{-- ── Main ── --}}
+    <main style="max-width:1280px;margin:0 auto;padding:32px 28px 60px;position:relative;z-index:1;">
+
+        {{-- Page header --}}
+        <div style="margin-bottom:28px;">
+            <h1 style="font-size:26px;font-weight:700;color:var(--text-1);margin:0 0 4px;">Reports Dashboard</h1>
+            <p style="font-size:13px;color:var(--text-3);margin:0;">Monitor and manage all praise &amp; prayer meeting submissions.</p>
+        </div>
+
+        {{-- ── Stat cards ── --}}
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px;">
             <template x-for="stat in stats" :key="stat.label">
-                <div class="glass-panel p-8 rounded-[2rem] relative overflow-hidden group hover:border-white/20 transition-all cursor-default">
-                    <div class="flex items-center justify-between relative z-10">
-                        <div>
-                            <p class="text-slate-500 text-xs uppercase tracking-[0.2em] font-black mb-2" x-text="stat.label"></p>
-                            <h3 class="text-4xl font-bold tracking-tight text-white" x-text="stat.value"></h3>
-                        </div>
-                        <div class="p-4 rounded-2xl bg-indigo-500/10 text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-all duration-500">
-                            <i :data-lucide="stat.icon" class="w-7 h-7"></i>
-                        </div>
+                <div class="card card-hover stat-card" style="padding:24px;display:flex;align-items:center;gap:18px;cursor:default;">
+                    <div class="stat-icon">
+                        <i :data-lucide="stat.icon" style="width:20px;height:20px;"></i>
                     </div>
-                    <div class="absolute -right-4 -bottom-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
-                         <i :data-lucide="stat.icon" class="w-32 h-32"></i>
+                    <div>
+                        <p style="font-size:10px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-3);margin:0 0 4px;" x-text="stat.label"></p>
+                        <p style="font-size:26px;font-weight:700;color:var(--text-1);margin:0;line-height:1;" x-text="stat.value"></p>
                     </div>
                 </div>
             </template>
         </div>
 
-        <div class="flex flex-col lg:flex-row gap-4 mb-8">
-            <div class="relative flex-grow">
-                <i data-lucide="search" class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500"></i>
-                <input type="text" x-model="search" @input="currentPage = 1" placeholder="Search church or group names..."
-                       class="w-full bg-white/5 border border-white/10 rounded-[1.25rem] pl-14 pr-6 py-4 focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500/40 outline-none transition-all placeholder:text-slate-600">
-            </div>
-            <div class="flex flex-wrap gap-4">
-                <div class="relative">
-                    <i data-lucide="calendar" class="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"></i>
-                    <input type="date" x-model="filterDate" @change="currentPage = 1"
-                           class="bg-white/5 border border-white/10 rounded-[1.25rem] pl-12 pr-6 py-4 outline-none focus:ring-2 focus:ring-indigo-500/40 cursor-pointer text-white">
+        {{-- ── Weekly Leaderboard ── --}}
+        <div x-show="!loading">
+            <div class="leaderboard-header">
+                <div class="leaderboard-title">
+                    <span>&#x1F451;</span> Top Group This Week
                 </div>
-                <button @click="resetFilters" class="glass-panel px-8 rounded-[1.25rem] hover:bg-white/10 transition-all text-sm font-bold text-slate-400 hover:text-white">
-                    Reset
-                </button>
-                <button @click="fetchReports(true)" class="glass-panel px-6 rounded-[1.25rem] hover:bg-indigo-500/20 transition-all border-indigo-500/20 group">
-                    <i data-lucide="refresh-cw" class="w-5 h-5 text-indigo-400 group-hover:rotate-180 transition-transform duration-500" :class="loading ? 'animate-spin' : ''"></i>
-                </button>
+                <div class="leaderboard-week" x-text="weekLabel"></div>
+            </div>
+
+            <div class="leaderboard-strip">
+                <template x-for="day in weeklyLeaders" :key="day.name">
+                    <div class="day-card" :class="day.isToday ? 'is-today' : ''">
+
+                        <div class="crown-wrap" x-show="day.winner">&#x1F451;</div>
+
+                        <p class="day-label" x-text="day.shortName"></p>
+                        <p class="day-name"  x-text="day.name"></p>
+
+                        <template x-if="day.winner">
+                            <div>
+                                <p class="winner-name"   x-text="day.winner.group"></p>
+                                <p class="winner-church" x-text="day.winner.church"></p>
+                                <div class="bar-track">
+                                    <div class="bar-fill" :style="`width:${day.pct}%`"></div>
+                                </div>
+                                <div class="att-row">
+                                    <span class="att-count" x-text="day.winner.attendance.toLocaleString()"></span>
+                                    <span class="att-label">present</span>
+                                </div>
+                            </div>
+                        </template>
+
+                        <template x-if="!day.winner">
+                            <p class="no-data">No report yet</p>
+                        </template>
+                    </div>
+                </template>
             </div>
         </div>
 
-        <div class="glass-panel rounded-[2.5rem] overflow-hidden relative shadow-2xl border-white/5">
-            <div x-show="loading" class="absolute inset-0 bg-slate-950/40 backdrop-blur-sm z-20 flex items-center justify-center" x-cloak>
-                <div class="flex flex-col items-center gap-4">
-                    <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                    <span class="text-xs font-black text-indigo-400 uppercase tracking-[0.3em]">Syncing Records</span>
-                </div>
+        {{-- ── Filters ── --}}
+        <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">
+            <div class="search-wrap" style="flex:1;min-width:220px;">
+                <i data-lucide="search" class="search-icon" style="width:16px;height:16px;"></i>
+                <input type="text" x-model="search" @input="currentPage = 1"
+                       placeholder="Search by church or group…" class="field">
             </div>
 
-            <div class="overflow-x-auto min-h-[400px]">
-                <table class="w-full text-left">
+            <input type="date" x-model="filterDate" @change="currentPage = 1"
+                   class="field" style="width:auto;">
+
+            <button @click="resetFilters" class="btn btn-ghost">
+                <i data-lucide="x-circle" style="width:14px;height:14px;"></i> Reset
+            </button>
+
+            <button @click="fetchReports(true)" class="btn btn-ghost"
+                    style="padding:10px 14px;" title="Refresh">
+                <i data-lucide="refresh-cw" style="width:15px;height:15px;" :class="loading ? 'spinner' : ''"></i>
+            </button>
+        </div>
+
+        {{-- ── Table card ── --}}
+        <div class="card" style="overflow:hidden;position:relative;">
+
+            {{-- Loading overlay --}}
+            <div x-show="loading" x-cloak
+                 style="position:absolute;inset:0;background:rgba(250,246,239,0.65);backdrop-filter:blur(4px);z-index:20;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;">
+                <div style="width:36px;height:36px;border:3px solid var(--border-strong);border-top-color:var(--amber-dk);border-radius:50%;" class="spinner"></div>
+                <span style="font-size:10px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-3);">Loading</span>
+            </div>
+
+            <div style="overflow-x:auto;min-height:360px;">
+                <table>
                     <thead>
-                        <tr class="border-b border-white/5 bg-white/[0.01]">
-                            <th class="px-8 py-6 text-xs uppercase tracking-[0.2em] text-slate-500 font-black">Group / Church</th>
-                            <th class="px-8 py-6 text-xs uppercase tracking-[0.2em] text-slate-500 font-black">Attendance</th>
-                            <th class="px-8 py-6 text-xs uppercase tracking-[0.2em] text-slate-500 font-black">Testimony</th>
-                            <th class="px-8 py-6 text-xs uppercase tracking-[0.2em] text-slate-500 font-black">Meeting Date</th>
-                            <th class="px-8 py-6 text-xs uppercase tracking-[0.2em] text-slate-500 font-black">Report Link</th>
-                            <th class="px-8 py-6 text-xs uppercase tracking-[0.2em] text-slate-500 font-black text-right">Options</th>
+                        <tr>
+                            <th style="padding-left:28px;">Group / Church</th>
+                            <th>Attendance</th>
+                            <th>Testimony</th>
+                            <th>Meeting Date</th>
+                            <th>Report Link</th>
+                            <th style="text-align:right;padding-right:28px;">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-white/5">
+                    <tbody>
                         <template x-for="report in paginatedReports" :key="report.id">
-                            <tr class="hover:bg-white/[0.02] transition-colors group">
-                                <td class="px-8 py-6">
-                                    <div class="font-bold text-white text-base" x-text="report.church"></div>
-                                    <div class="text-[10px] text-indigo-400 font-black uppercase tracking-widest mt-1 opacity-70" x-text="report.group"></div>
+                            <tr>
+                                <td style="padding-left:28px;">
+                                    <div style="font-size:14px;font-weight:600;color:var(--text-1);" x-text="report.church"></div>
+                                    <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--amber);margin-top:2px;opacity:0.8;" x-text="report.group"></div>
                                 </td>
 
-                                <td class="px-8 py-6">
-                                    <span class="text-emerald-500/80 font-bold" x-text="report.attendance"></span>
+                                <td>
+                                    <span class="badge badge-success">
+                                        <i data-lucide="users" style="width:11px;height:11px;"></i>
+                                        <span x-text="report.attendance"></span>
+                                    </span>
                                 </td>
 
-                                <td class="px-8 py-6">
-                                    <p @click="openTestimony(report)" class="text-sm text-slate-400 max-w-xs truncate cursor-pointer hover:text-slate-200 transition-colors" x-text="report.testimony"></p>
+                                <td>
+                                    <p @click="openTestimony(report)"
+                                       style="font-size:13px;color:var(--text-2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;margin:0;"
+                                       :title="report.testimony ? 'Click to read full testimony' : ''"
+                                       x-text="report.testimony || '—'">
+                                    </p>
                                 </td>
 
-                                <td class="px-8 py-6">
-                                    <div class="flex items-center gap-2 text-sm text-slate-400">
-                                        <i data-lucide="calendar-days" class="w-4 h-4 opacity-50"></i>
+                                <td>
+                                    <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-2);">
+                                        <i data-lucide="calendar" style="width:13px;height:13px;color:var(--text-3);flex-shrink:0;"></i>
                                         <span x-text="formatDate(report.meeting_date)"></span>
                                     </div>
                                 </td>
 
-                                <td class="px-8 py-6">
-                                    <a :href="report.prayer_link" target="_blank"
-                                       class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-500/5 text-indigo-400 hover:bg-indigo-500 hover:text-white transition-all text-xs font-bold border border-indigo-500/10">
-                                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i> View Link
-                                    </a>
+                                {{-- ── Updated Report Link cell ── --}}
+                                <td>
+                                    <template x-if="report.prayer_link">
+                                        <div class="link-cell">
+                                            <a :href="report.prayer_link" target="_blank" rel="noopener noreferrer"
+                                               class="link-url" :title="report.prayer_link"
+                                               x-text="report.prayer_link"></a>
+                                            <button
+                                                class="btn-copy"
+                                                :class="copiedId === report.id ? 'copied' : ''"
+                                                :title="copiedId === report.id ? 'Copied!' : 'Copy link'"
+                                                @click="copyLink(report)">
+                                                <template x-if="copiedId !== report.id">
+                                                    <i data-lucide="copy" style="width:13px;height:13px;"></i>
+                                                </template>
+                                                <template x-if="copiedId === report.id">
+                                                    <i data-lucide="check" style="width:13px;height:13px;"></i>
+                                                </template>
+                                            </button>
+                                        </div>
+                                    </template>
+                                    <template x-if="!report.prayer_link">
+                                        <span class="link-no-url">No link</span>
+                                    </template>
                                 </td>
-                                <td class="px-8 py-6 text-right">
-                                    <div class="flex items-center justify-end gap-2">
-                                        <button @click="triggerEdit(report)"
-                                                class="text-slate-600 hover:text-indigo-400 hover:bg-indigo-500/10 p-3 rounded-xl transition-all">
-                                            <i data-lucide="edit-3" class="w-5 h-5"></i>
+
+                                <td style="text-align:right;padding-right:28px;">
+                                    <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;">
+                                        <button @click="triggerEdit(report)" class="btn btn-icon" title="Edit">
+                                            <i data-lucide="edit-2" style="width:15px;height:15px;"></i>
                                         </button>
-                                        <button @click="triggerDelete(report)"
-                                                class="text-slate-600 hover:text-red-500 hover:bg-red-500/10 p-3 rounded-xl transition-all">
-                                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                        <button @click="triggerDelete(report)" class="btn btn-icon danger" title="Delete">
+                                            <i data-lucide="trash-2" style="width:15px;height:15px;"></i>
                                         </button>
                                     </div>
                                 </td>
                             </tr>
                         </template>
 
+                        {{-- Empty state --}}
                         <tr x-show="filteredReports.length === 0 && !loading">
-                            <td colspan="6" class="px-8 py-20 text-center">
-                                <div class="flex flex-col items-center opacity-40">
-                                    <i data-lucide="database-zap" class="w-12 h-12 mb-4"></i>
-                                    <p class="text-lg font-bold">No records found</p>
-                                    <p class="text-sm">Try adjusting your filters or search keywords</p>
+                            <td colspan="6" style="padding:64px 28px;text-align:center;">
+                                <div style="display:inline-flex;flex-direction:column;align-items:center;gap:10px;opacity:0.4;">
+                                    <i data-lucide="inbox" style="width:36px;height:36px;color:var(--text-3);"></i>
+                                    <p style="font-size:14px;font-weight:600;color:var(--text-1);margin:0;">No records found</p>
+                                    <p style="font-size:12px;color:var(--text-3);margin:0;">Try adjusting your search or date filter</p>
                                 </div>
                             </td>
                         </tr>
@@ -307,23 +843,21 @@
                 </table>
             </div>
 
-            <div class="px-8 py-6 border-t border-white/5 flex items-center justify-between bg-white/[0.01]">
-                <div class="flex items-center gap-4">
-                    <span class="text-xs font-bold text-slate-500 uppercase tracking-widest"
-                          x-text="`Page ${currentPage} of ${totalPages}`"></span>
-                    <div class="h-1 w-24 bg-white/5 rounded-full overflow-hidden">
-                        <div class="h-full bg-indigo-500 transition-all duration-500"
-                             :style="`width: ${(currentPage / totalPages) * 100}%`"></div>
+            {{-- Pagination footer --}}
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-top:1px solid var(--border);background:rgba(250,246,239,0.4);">
+                <div style="display:flex;align-items:center;gap:14px;">
+                    <span style="font-size:12px;color:var(--text-3);"
+                          x-text="`${filteredReports.length} result${filteredReports.length !== 1 ? 's' : ''} · Page ${currentPage} of ${totalPages}`"></span>
+                    <div class="progress-bar" style="width:80px;">
+                        <div class="progress-fill" :style="`width:${(currentPage/totalPages)*100}%`"></div>
                     </div>
                 </div>
-                <div class="flex gap-3">
-                    <button @click="prevPage" :disabled="currentPage === 1"
-                            class="p-3 rounded-xl glass-panel hover:bg-white/10 disabled:opacity-10 transition-all">
-                        <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                <div style="display:flex;gap:6px;">
+                    <button @click="prevPage" :disabled="currentPage === 1" class="page-btn">
+                        <i data-lucide="chevron-left" style="width:16px;height:16px;"></i>
                     </button>
-                    <button @click="nextPage" :disabled="currentPage === totalPages"
-                            class="p-3 rounded-xl glass-panel hover:bg-white/10 disabled:opacity-10 transition-all">
-                        <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                    <button @click="nextPage" :disabled="currentPage === totalPages" class="page-btn">
+                        <i data-lucide="chevron-right" style="width:16px;height:16px;"></i>
                     </button>
                 </div>
             </div>
@@ -340,8 +874,8 @@
                 currentPage: 1,
                 pageSize: 8,
                 toasts: [],
+                copiedId: null,
 
-                // Modal States
                 showDeleteModal: false,
                 reportToDelete: null,
                 showEditModal: false,
@@ -359,44 +893,57 @@
                 },
 
                 formatDate(dateString) {
-                    if(!dateString || dateString === '0000-00-00') return 'N/A';
-
+                    if (!dateString || dateString === '0000-00-00') return 'N/A';
                     try {
-                        // Creating date in UTC to avoid timezone shift issues
                         const date = new Date(dateString);
                         if (isNaN(date.getTime())) return 'N/A';
-
-                        return date.toLocaleDateString('en-US', {
-                            month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC'
-                        });
-                    } catch (e) {
-                        return 'N/A';
-                    }
+                        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+                    } catch (e) { return 'N/A'; }
                 },
 
                 addToast(message, type = 'success') {
                     const id = Date.now();
                     this.toasts.push({ id, message, type });
                     this.refreshIcons();
-                    setTimeout(() => {
-                        this.toasts = this.toasts.filter(t => t.id !== id);
-                    }, 4000);
+                    setTimeout(() => { this.toasts = this.toasts.filter(t => t.id !== id); }, 4000);
                 },
 
                 openTestimony(report) {
+                    if (!report.testimony) return;
                     this.selectedTestimony = report;
                     this.showTestimonyModal = true;
                     this.refreshIcons();
                 },
 
+                async copyLink(report) {
+                    if (!report.prayer_link) return;
+                    try {
+                        await navigator.clipboard.writeText(report.prayer_link);
+                        this.copiedId = report.id;
+                        this.refreshIcons();
+                        setTimeout(() => {
+                            this.copiedId = null;
+                            this.refreshIcons();
+                        }, 2000);
+                    } catch (e) {
+                        this.addToast('Could not copy link', 'error');
+                    }
+                },
+
                 async fetchReports(manual = false) {
                     this.loading = true;
                     try {
-                        const response = await fetch('/api-v1/prayer-reports');
-                        if (!response.ok) throw new Error();
+                        const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                        const response = await fetch('/api-v1/praise-reports', {
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': token
+                            }
+                        });
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
                         const result = await response.json();
                         this.reports = result.data ? result.data : result;
-                        if(manual) this.addToast('Database synchronized');
+                        if (manual) this.addToast('Records refreshed successfully');
                     } catch (e) {
                         this.addToast('Connection failed. Please retry.', 'error');
                     }
@@ -404,15 +951,11 @@
                     this.refreshIcons();
                 },
 
-                // Update Logic
                 triggerEdit(report) {
                     this.editForm = { ...report };
                     if (this.editForm.meeting_date) {
-                        try {
-                            this.editForm.meeting_date = new Date(this.editForm.meeting_date).toISOString().split('T')[0];
-                        } catch(e) {
-                            this.editForm.meeting_date = '';
-                        }
+                        try { this.editForm.meeting_date = new Date(this.editForm.meeting_date).toISOString().split('T')[0]; }
+                        catch(e) { this.editForm.meeting_date = ''; }
                     }
                     this.showEditModal = true;
                     this.refreshIcons();
@@ -422,7 +965,7 @@
                     this.loading = true;
                     try {
                         const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                        const response = await fetch(`/api-v1/prayer-reports/${this.editForm.id}`, {
+                        const response = await fetch(`/api-v1/praise-reports/${this.editForm.id}`, {
                             method: 'PUT',
                             headers: {
                                 'X-CSRF-TOKEN': token,
@@ -431,18 +974,13 @@
                             },
                             body: JSON.stringify(this.editForm)
                         });
-
                         if (response.ok) {
                             const updatedData = await response.json();
                             const index = this.reports.findIndex(r => r.id === this.editForm.id);
-                            if (index !== -1) {
-                                this.reports[index] = updatedData.data || updatedData;
-                            }
+                            if (index !== -1) this.reports[index] = updatedData.data || updatedData;
                             this.addToast('Report updated successfully');
                             this.showEditModal = false;
-                        } else {
-                            throw new Error();
-                        }
+                        } else throw new Error();
                     } catch (e) {
                         this.addToast('Failed to update record', 'error');
                     } finally {
@@ -451,7 +989,6 @@
                     }
                 },
 
-                // Delete Logic
                 triggerDelete(report) {
                     this.reportToDelete = report;
                     this.showDeleteModal = true;
@@ -459,27 +996,23 @@
                 },
 
                 async confirmDelete() {
-                    if(!this.reportToDelete) return;
+                    if (!this.reportToDelete) return;
                     const id = this.reportToDelete.id;
                     this.showDeleteModal = false;
-
                     try {
                         const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                        const response = await fetch(`/api-v1/prayer-reports/${id}`, {
+                        const response = await fetch(`/api-v1/praise-reports/${id}`, {
                             method: 'DELETE',
                             headers: {
                                 'X-CSRF-TOKEN': token,
                                 'Accept': 'application/json'
                             }
                         });
-
-                        if(response.ok) {
+                        if (response.ok) {
                             this.reports = this.reports.filter(r => r.id !== id);
                             this.addToast('Entry removed permanently');
                             if (this.paginatedReports.length === 0 && this.currentPage > 1) this.currentPage--;
-                        } else {
-                            throw new Error();
-                        }
+                        } else throw new Error();
                     } catch (e) {
                         this.addToast('Unable to delete record', 'error');
                     } finally {
@@ -499,11 +1032,10 @@
                     return this.reports.filter(r => {
                         const matchesSearch = r.church.toLowerCase().includes(this.search.toLowerCase()) ||
                                               r.group.toLowerCase().includes(this.search.toLowerCase());
-
                         let matchesDate = true;
                         if (this.filterDate) {
                             const reportDate = new Date(r.meeting_date).toDateString();
-                            const filterDate = new Date(this.filterDate).toDateString();
+                            const filterDate  = new Date(this.filterDate).toDateString();
                             matchesDate = reportDate === filterDate;
                         }
                         return matchesSearch && matchesDate;
@@ -511,7 +1043,7 @@
                 },
 
                 get paginatedReports() {
-                    let start = (this.currentPage - 1) * this.pageSize;
+                    const start = (this.currentPage - 1) * this.pageSize;
                     return this.filteredReports.slice(start, start + this.pageSize);
                 },
 
@@ -519,29 +1051,80 @@
                     return Math.ceil(this.filteredReports.length / this.pageSize) || 1;
                 },
 
-                nextPage() {
-                    if(this.currentPage < this.totalPages) {
-                        this.currentPage++;
-                        this.refreshIcons();
-                    }
-                },
-
-                prevPage() {
-                    if(this.currentPage > 1) {
-                        this.currentPage--;
-                        this.refreshIcons();
-                    }
-                },
+                nextPage() { if (this.currentPage < this.totalPages) { this.currentPage++; this.refreshIcons(); } },
+                prevPage() { if (this.currentPage > 1)              { this.currentPage--; this.refreshIcons(); } },
 
                 get stats() {
                     const totalAttendance = this.reports.reduce((sum, r) => sum + (parseInt(r.attendance) || 0), 0);
                     const groups = [...new Set(this.reports.map(r => r.group))].length;
-
                     return [
-                        { label: 'Cumulative Reports', value: this.reports.length, icon: 'file-text' },
-                        { label: 'Reporting Groups', value: groups, icon: 'users' },
-                        { label: 'Total Attendance', value: totalAttendance.toLocaleString(), icon: 'trending-up' }
+                        { label: 'Total Reports',    value: this.reports.length,              icon: 'file-text'   },
+                        { label: 'Reporting Groups',  value: groups,                           icon: 'users'       },
+                        { label: 'Total Attendance',  value: totalAttendance.toLocaleString(), icon: 'trending-up' }
                     ];
+                },
+
+                get currentWeekDates() {
+                    const now  = new Date();
+                    const dow  = now.getDay();
+                    const diffToMon = (dow === 0) ? -6 : 1 - dow;
+                    const mon  = new Date(now);
+                    mon.setDate(now.getDate() + diffToMon);
+                    mon.setHours(0, 0, 0, 0);
+                    return Array.from({ length: 5 }, (_, i) => {
+                        const d = new Date(mon);
+                        d.setDate(mon.getDate() + i);
+                        return d;
+                    });
+                },
+
+                get weekLabel() {
+                    const days = this.currentWeekDates;
+                    const fmt  = d => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    return `Week of ${fmt(days[0])} \u2013 ${fmt(days[4])}`;
+                },
+
+                get weeklyLeaders() {
+                    const dayNames   = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+                    const shortNames = ['MON', 'TUE', 'WED', 'THU', 'FRI'];
+                    const weekDates  = this.currentWeekDates;
+                    const todayStr   = new Date().toDateString();
+                    let globalMax    = 0;
+
+                    const dayData = weekDates.map((date, i) => {
+                        const dateStr = date.toDateString();
+
+                        const dayReports = this.reports.filter(r => {
+                            if (!r.meeting_date) return false;
+                            return new Date(r.meeting_date + 'T00:00:00').toDateString() === dateStr;
+                        });
+
+                        const byGroup = {};
+                        dayReports.forEach(r => {
+                            const att = parseInt(r.attendance) || 0;
+                            if (!byGroup[r.group]) {
+                                byGroup[r.group] = { group: r.group, church: r.church, attendance: 0 };
+                            }
+                            byGroup[r.group].attendance += att;
+                        });
+
+                        const sorted = Object.values(byGroup).sort((a, b) => b.attendance - a.attendance);
+                        const winner = sorted[0] || null;
+                        if (winner && winner.attendance > globalMax) globalMax = winner.attendance;
+
+                        return {
+                            name:      dayNames[i],
+                            shortName: shortNames[i],
+                            isToday:   dateStr === todayStr,
+                            winner,
+                            _raw:      winner ? winner.attendance : 0,
+                        };
+                    });
+
+                    return dayData.map(d => ({
+                        ...d,
+                        pct: globalMax > 0 ? Math.round((d._raw / globalMax) * 100) : 0,
+                    }));
                 }
             }
         }

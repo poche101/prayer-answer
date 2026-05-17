@@ -12,12 +12,10 @@ use Illuminate\Foundation\Http\Middleware\ValidateCsrfTokens;
 |--------------------------------------------------------------------------
 */
 
-// Redirect root route directly to the praise report submission view page
 Route::get('/', function () {
     return view('welcome', ['type' => 'praise']);
-});
+})->name('home');
 
-// Using the 'welcome' view for both, but passing a 'type' variable
 Route::get('/submit-praise-report', function () {
     return view('welcome', ['type' => 'praise']);
 })->name('praise.report.submit');
@@ -30,11 +28,6 @@ Route::get('/submit-prayer-report', function () {
 |--------------------------------------------------------------------------
 | Public API Endpoints (Submissions)
 |--------------------------------------------------------------------------
-| We use 'submit-' in the URL to clearly distinguish these from the
-| Admin Management Resource routes.
-|
-| NOTE: .withoutMiddleware() strips the CSRF token requirements so your
-| stateless external API submits function seamlessly from your JavaScript.
 */
 Route::middleware('throttle:10,1')
     ->withoutMiddleware([ValidateCsrfTokens::class])
@@ -63,21 +56,12 @@ Route::middleware('guest')->group(function () {
 */
 Route::middleware(['auth'])->group(function () {
 
-    // The Dashboard View
     Route::get('/dashboard', function () {
         return view('dashboard');
     })->name('dashboard');
 
-    // Logout Action
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-    /*
-    |--------------------------------------------------------------------------
-    | Internal Dashboard APIs (Admin Management)
-    |--------------------------------------------------------------------------
-    | Explicitly overriding parameter bindings maps kebab-case route variables
-    | directly to your Controller's camelCase parameters ($prayerReport / $praiseReport).
-    */
     Route::prefix('api-v1')->group(function () {
 
         Route::apiResource('prayer-reports', PrayerReportController::class)
@@ -91,5 +75,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/user', function (Illuminate\Http\Request $request) {
             return $request->user();
         });
-    });
-});
+
+    }); // closes prefix('api-v1')
+
+}); // closes middleware(['auth'])

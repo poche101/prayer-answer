@@ -23,7 +23,7 @@ class PraiseReportResource extends JsonResource
             'prayer_link'  => $this->prayer_link,
 
             // Format the meeting date for the UI
-            'date'         => Carbon::parse($this->meeting_date)->format('Y-m-d'),
+    'meeting_date' => Carbon::parse($this->meeting_date)->format('Y-m-d'), // was 'date'
 
             'testimony'    => $this->testimony ?? 'No testimony shared',
             'created_at'   => $this->created_at->diffForHumans(),
